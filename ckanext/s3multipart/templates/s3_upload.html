@@ -4,67 +4,83 @@
 {% block primary_content_inner %}
 {% if 'session_token' in session_credentials %}
 <div>
-    <input type="file" id="files" />
-    <div>
-        {%else %}
-        No access to S3 upload, try logging in
-        {% endif %}
+    <input type="file" id="files"/>
 
-        {% endblock %}
-        {%block scripts %}
-        {{ super() }}
-        {% if 'session_token' in session_credentials %}
-        <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.26.min.js"></script>
-        <script language="javascript">
+    <div class="meter animate" style="display:none">
+        <span style="width: 0%"><span></span></span>
+    </div>
 
-            var files;
+    <span id="upload-progress">
+        </span>
+</div>
+{%else %}
+No access to S3 upload, try logging in
+{% endif %}
 
-            window.onload=function() {
-                $('#files').change(function (evt) {
-                    files = evt.target.files;
+{% endblock %}
 
-                    for (var i = 0; i < files.length; i++) {
+{%block styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="/s3multipart.css"/>
+{% endblock %}
+{%block scripts %}
+{{ super() }}
+{% if 'session_token' in session_credentials %}
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.26.min.js"></script>
+<script language="javascript">
 
-                        var s3 = new AWS.S3({
-                            accessKeyId: '{{session_credentials["access_key"]}}',
-                            secretAccessKey: '{{session_credentials["secret_key"]}}',
-                            sessionToken: '{{session_credentials["session_token"]}}',
-                            region: '{{h.get_s3_region()}}'
-                        });
-// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html
-                        // default = 4 concurrent uploads of 5mb parts
-                        var managedUpload = s3.upload({
-                            ACL: 'public-read',
-                            Body: files[i],
-                            Bucket:'{{h.get_s3_bucket()}}',
-                            Key: files[i].name
-                        }, function (error, data) {
-                            // upload finished
-                            if (error) {
-                                // upload failed
-                                window.alert('upload failed');
-                                console.log(data);
-                            } else if (data) {
-                                // upload succeeded
-                                window.alert('upload success @ '+data['Location'])
-                                console.log(data);
-                            }
-                        });
+    var files;
 
-                        managedUpload.on('httpUploadProgress', function (progress) {
-                            // progress event handler
-                            // progress.loaded = number of bytes uploaded so far
-                            // progress.total = size of file in bytes (may be undefined if not yet known)
-                            console.log(progress)
-                            console.log(progress.loaded)
-                        });
-                    }
-
-                    $(evt.target).val('');
-
+    window.onload = function () {
+        $('#files').change(function (evt) {
+            files = evt.target.files;
+            $('#files').attr("disabled", "disabled");
+            $('#files').hide();
+                var s3 = new AWS.S3({
+                    accessKeyId: '{{session_credentials["access_key"]}}',
+                    secretAccessKey: '{{session_credentials["secret_key"]}}',
+                    sessionToken: '{{session_credentials["session_token"]}}',
+                    region: '{{h.get_s3_region()}}'
                 });
-            };
+// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html
+                // default = 4 concurrent uploads of 5mb parts
+                var managedUpload = s3.upload({
+                    ACL: 'public-read',
+                    Body: files[0],
+                    Bucket: '{{h.get_s3_bucket()}}',
+                    Key: files[0].name
+                }, function (error, data) {
+                    // upload finished
+                    if (error) {
+                        // upload failed
+                        $('.meter').hide();
+                        $('#upload-progress').html('Upload failed due to error:' + data);
+                        console.log(data);
+                    } else if (data) {
+                        // upload succeeded
+                        $('.meter').hide();
+                        $('#upload-progress').html('Upload completed, file available at <a href="' + data['Location']
+                        +'">'+data['Location']+'</a>');
+                        console.log(data);
+                    }
+                });
 
-        </script>
-        {% endif %}
-        {% endblock %}
+                managedUpload.on('httpUploadProgress', function (progress) {
+                    // progress event handler
+                    // progress.loaded = number of bytes uploaded so far
+                    $('.meter').show();
+                    $('.meter').first().children().width(Math.round(progress.loaded / progress.total * 100) + '%');
+                    $('#upload-progress').html(
+                            Math.round(progress.loaded / progress.total * 100)
+                            + '% uploaded (' + progress.loaded + ' of ' + progress.total + ' bytes)');
+                });
+
+
+            $(evt.target).val('');
+
+        });
+    };
+
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "page.html" %}
+
+{% set session_credentials = h.get_session_credentials() %}
+{% block primary_content_inner %}
+{% if 'session_token' in session_credentials %}
+<div>
+    <input type="file" id="files" />
+    <div>
+        {%else %}
+        No access to S3 upload, try logging in
+        {% endif %}
+
+        {% endblock %}
+        {%block scripts %}
+        {{ super() }}
+        {% if 'session_token' in session_credentials %}
+        <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.26.min.js"></script>
+        <script language="javascript">
+
+            var files;
+
+            window.onload=function() {
+                $('#files').change(function (evt) {
+                    files = evt.target.files;
+
+                    for (var i = 0; i < files.length; i++) {
+
+                        var s3 = new AWS.S3({
+                            accessKeyId: '{{session_credentials["access_key"]}}',
+                            secretAccessKey: '{{session_credentials["secret_key"]}}',
+                            sessionToken: '{{session_credentials["session_token"]}}',
+                            region: '{{h.get_s3_region()}}'
+                        });
+// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html
+                        // default = 4 concurrent uploads of 5mb parts
+                        var managedUpload = s3.upload({
+                            ACL: 'public-read',
+                            Body: files[i],
+                            Bucket:'{{h.get_s3_bucket()}}',
+                            Key: files[i].name
+                        }, function (error, data) {
+                            // upload finished
+                            if (error) {
+                                // upload failed
+                                window.alert('upload failed');
+                                console.log(data);
+                            } else if (data) {
+                                // upload succeeded
+                                window.alert('upload success @ '+data['Location'])
+                                console.log(data);
+                            }
+                        });
+
+                        managedUpload.on('httpUploadProgress', function (progress) {
+                            // progress event handler
+                            // progress.loaded = number of bytes uploaded so far
+                            // progress.total = size of file in bytes (may be undefined if not yet known)
+                            console.log(progress)
+                            console.log(progress.loaded)
+                        });
+                    }
+
+                    $(evt.target).val('');
+
+                });
+            };
+
+        </script>
+        {% endif %}
+        {% endblock %}

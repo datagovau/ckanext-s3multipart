@@ -44,6 +44,8 @@ Requirements
 For example, you might want to mention here which versions of CKAN this
 extension works with.
 
+https://docs.aws.amazon.com/AWSJavaScriptSDK/guide/browser-configuring.html#Configuring_CORS_for_an_Amazon_S3_Bucket
+
 
 ------------
 Installation
@@ -80,8 +82,8 @@ Document any optional config settings here. For example::
 
     # The minimum number of hours to wait before re-checking a resource
     # (optional, default: 24).
-    ckanext.s3multipart.some_setting = some_default_value
-
+    ckanext.s3multipart.s3_bucket = some_default_value
+    ckanext.s3multipart.s3_region = some_default_value
 
 ------------------------
 Development Installation

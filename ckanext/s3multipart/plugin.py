@@ -7,6 +7,9 @@ import boto.sts
 import ckan.model as model
 from ckan.common import  request, c
 
+import ckan.lib.helpers as h
+from logging import getLogger
+log = getLogger(__name__)
 def get_s3_bucket():
     return config.get('ckanext.s3multipart.s3_bucket', None)
 
@@ -19,10 +22,15 @@ def get_session_credentials():
                'save': 'save' in request.params}
     try:
         logic.check_access('package_create', context)
-        sts = boto.connect_sts(aws_access_key_id=config.get('ckanext.s3multipart.aws_key', None),
-                               aws_secret_access_key=config.get('ckanext.s3multipart.aws_secret', None))
-        tok = sts.get_session_token(duration = 3600)
+        sts = boto.connect_sts();
+        tok = sts.get_session_token(duration=3600)
         return tok.to_dict()
+    except boto.exception.NoAuthHandlerFound, e:
+        log.error("Amazon AWS credentials not set up for boto. "
+                  "Please refer to https://boto.readthedocs.org/en/latest/boto_config_tut.html")
+        h.flash_error("Amazon AWS credentials not set up for boto. "
+                      "Please refer to https://boto.readthedocs.org/en/latest/boto_config_tut.html")
+        return {}
     except logic.NotAuthorized:
         return {}
 
@@ -30,7 +38,12 @@ def get_session_credentials():
 class S3MultipartPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IRoutes, inherit=True)
 
+    def before_map(self, map):
+        map.connect('/api/s3_auth',
+                    controller='ckanext.s3multipart.controller:S3MultipartController', action='s3_auth')
+        return map
     ## ITemplateHelpers
 
     def get_helpers(self):

@@ -1,0 +1,30 @@
+{% ckan_extends %}
+{% block basic_fields_url %}
+{% set is_upload = (data.url_type == 'upload') %}
+{% set placeholder = placeholder if placeholder else _('http://example.com/my-image.jpg') %}
+
+<div class="image-upload" data-module="image-upload"
+     data-module-is_url="{{ 'true' if data.url and not is_upload else 'false' }}"
+     data-module-is_upload="{{ 'true' if is_upload else 'false' }}"
+     data-module-field_url="url" data-module-field_upload="upload"
+     data-module-field_clear="clear_upload" data-module-upload_label="{{ _('File') }}">
+
+    {% call form.input('url', label=_('URL'), id='field-image-url', placeholder=placeholder, value=data.get('url'), error=errors.get('url'), classes=['control-full']) %}
+    <div class="meter animate" style="display:none">
+        <span style="width: 0%"><span></span></span>
+    </div>
+
+    <span id="upload-progress">
+        </span>
+    {% endcall %}
+
+
+    {% call form.input('upload', label=_('File'), id='field-image-upload', type='file', placeholder='', value='', error='', classes=['control-full']) %}
+
+    {% endcall %}
+    {% if is_upload %}
+    {{ form.checkbox(field_clear, label=_('Clear Upload'), id='field-clear-upload', value='true', error='', classes=['control-full']) }}
+    {% endif %}
+    </div>
+
+{% endblock %}

@@ -20,11 +20,12 @@
 
 
     {% call form.input('upload', label=_('File'), id='field-image-upload', type='file', placeholder='', value='', error='', classes=['control-full']) %}
-
+    <a id="advanced-upload" class="btn" style="display: inline-block;"><i class="icon-cloud-upload"></i>Advanced Upload</a>
     {% endcall %}
     {% if is_upload %}
     {{ form.checkbox(field_clear, label=_('Clear Upload'), id='field-clear-upload', value='true', error='', classes=['control-full']) }}
     {% endif %}
+
     </div>
 
 {% endblock %}

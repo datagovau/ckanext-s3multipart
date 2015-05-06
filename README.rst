@@ -28,8 +28,11 @@ To install ckanext-s3multipart:
 
 2. Install the ckanext-s3multipart Python package into your virtual environment::
 
-     pip install ckanext-s3multipart
-
+    git clone https://github.com/maxious/ckanext-s3multipart.git
+    cd ckanext-s3multipart
+    python setup.py develop
+    pip install -r dev-requirements.txt
+    
 3. Add ``s3multipart`` to the ``ckan.plugins`` setting in your CKAN
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
@@ -49,23 +52,17 @@ To install ckanext-s3multipart:
 Config Settings
 ---------------
 
-Document any optional config settings here. For example::
-
-    # The minimum number of hours to wait before re-checking a resource
-    # (optional, default: 24).
+    # S3 bucket name
     ckanext.s3multipart.s3_bucket = bucket_name
+    # S3 region eg. ap-southeast-2
     ckanext.s3multipart.s3_region = region_name
 
-------------------------
-Development Installation
-------------------------
+-----
+TODOs
+-----
 
-To install ckanext-s3multipart for development, activate your CKAN virtualenv and
-do::
+Hide advanced upload button by default
 
-    git clone https://github.com/maxious/ckanext-s3multipart.git
-    cd ckanext-s3multipart
-    python setup.py develop
-    pip install -r dev-requirements.txt
+Upload files to subfolders based on user/organisation id, and limit API keys to those paths https://docs.aws.amazon.com/STS/latest/UsingSTS/permissions-assume-role.html
 
-
+Additional Key Value metadata including original portal, user, package and resource id

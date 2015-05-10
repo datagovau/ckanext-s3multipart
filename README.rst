@@ -37,11 +37,62 @@ To install ckanext-s3multipart:
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
 
-4. Set Bucket Name and Region in config file
+4. Create an s3 bucket and set Bucket Name and Region in CKAN config file
 
 5. You need to allow CORS access to your bucket https://docs.aws.amazon.com/AWSJavaScriptSDK/guide/browser-configuring.html#Configuring_CORS_for_an_Amazon_S3_Bucket
+Make sure your CORS settings for your S3 bucket looks similar to what is provided below (The PUT allowed method and the ETag exposed header are critical).
 
-6. Set up a IAM user with S3 access only and make those credentials available to "boto" the python library for AWS https://boto.readthedocs.org/en/latest/boto_config_tut.html
+        <CORSConfiguration>
+            <CORSRule>
+                <AllowedOrigin>https://*.yourdomain.com</AllowedOrigin>
+                <AllowedOrigin>http://*.yourdomain.com</AllowedOrigin>
+                <AllowedMethod>PUT</AllowedMethod>
+                <AllowedMethod>POST</AllowedMethod>
+                <AllowedMethod>DELETE</AllowedMethod>
+                <ExposeHeader>ETag</ExposeHeader>
+                <AllowedHeader>*</AllowedHeader>
+            </CORSRule>
+        </CORSConfiguration>
+
+5. Setup an S3 access role. For maximum security, rather than using the Amazon managed policies, create a custom IAM policy.
+You should also insert the name of your bucket in the resource clause to further limit access eg. "Resource": "arn:aws:s3:::bucketname/*"
+ (Remove any spaces before the first bracket after copying)
+
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                    "s3:GetObject*",
+                    "s3:GetBucketLocation",
+                    "s3:PutObject*",
+                    "s3:\*Multipart*"
+                    ],
+                    "Resource": "*"
+                }
+            ]
+        }
+
+6. Setup an s3 access only IAM role https://console.aws.amazon.com/iam/home
+You'll need your 12 digit Amazon Acount ID from the Billing Infromation control panel https://console.aws.amazon.com/billing/home
+Then create add the role name to the ckan config file
+
+6. Set up a IAM user with the S3 access policy and also AWS Security Token Service access to AssumeRole.
+You should also insert the name of the IAM role in the resource clause to further limit access eg. "Resource": "arn:aws:iam::account-id:role/role-name"
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": "sts:AssumeRole",
+                    "Resource": "*"
+                }
+            ]
+        }
+
+Make those credentials available to "boto" the python library for AWS https://boto.readthedocs.org/en/latest/boto_config_tut.html
+
 
 7. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
 
@@ -56,12 +107,17 @@ Config Settings
     ckanext.s3multipart.s3_bucket = bucket_name
     # S3 region eg. ap-southeast-2
     ckanext.s3multipart.s3_region = region_name
+    ckanext.s3multipart.s3_role = region_name
+    # S3 IAM role name
+
+    ckanext.s3multipart.prefix = "/ckan_uploads"
+
 
 -----
 TODOs
 -----
 
-Hide advanced upload button by default
+Warn about replacing files. https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#headObject-property
 
 Upload files to subfolders based on user/organisation id, and limit API keys to those paths https://docs.aws.amazon.com/STS/latest/UsingSTS/permissions-assume-role.html
 

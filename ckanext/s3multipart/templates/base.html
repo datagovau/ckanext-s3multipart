@@ -12,90 +12,119 @@
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.26.min.js"></script>
 <script language="javascript">
 
-    var files;
+    var file;
     var managedUpload;
     var s3_enabled = false;
-    var isInChoose  = false;
+    var isInChoose = false;
 
     window.onload = function () {
         // https://jsfiddle.net/embkay06/kjjcv42L/32/
-        $(window).on("focus", function(temp){
-            if(isInChoose)
-            {
-                isInChoose		=	false;
-                setTimeout(function(){
-                    temp            =   $("#field-image-upload").val();
-                    if(temp)
-                    {
+        $(window).on("focus", function (temp) {
+            if (isInChoose) {
+                isInChoose = false;
+                setTimeout(function () {
+                    temp = $("#field-image-upload").val();
+                    if (temp) {
                         return;
                     }
-                   s3_enabled = false;
+                    s3_enabled = false;
                 }, 500);
             }
         });
+
         $('#field-image-upload').change(function (evt) {
-            files = evt.target.files;
-            if (files.length == 0) {
+
+            if (evt.target.files.length == 0) {
                 s3_enabled = false;
             }
             if (s3_enabled) {
+                file = evt.target.files[0];
+                $('#upload-progress').html('');
                 var s3 = new AWS.S3({
                     accessKeyId: '{{session_credentials["access_key"]}}',
                     secretAccessKey: '{{session_credentials["secret_key"]}}',
                     sessionToken: '{{session_credentials["session_token"]}}',
                     region: '{{h.get_s3_region()}}'
                 });
-                // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html
-                // default = 4 concurrent uploads of 5mb parts
-                managedUpload = s3.upload({
-                    ACL: 'public-read',
-                    Body: files[0],
+
+                s3.headObject({
                     Bucket: '{{h.get_s3_bucket()}}',
-                    Key: files[0].name
-                }, function (error, data) {
-                    // upload finished
-                    if (error) {
-                        // upload failed
-                        $('.meter').hide();
-                        $('#upload-progress').html('Upload failed due to error:' + data);
-                        console.log(data);
-                    } else if (data) {
-                        // upload succeeded
-                        $('.meter').hide();
-                        $('#upload-progress').html('Upload completed, file available at <a href="' + data['Location']
-                        + '">' + data['Location'] + '</a>');
-
-                        $('#field-image-url').attr('value', data['Location']);
-                        $('#field-image-url')[0].value = data['Location'];
-                        $('#field-image-url').attr('placeholder', data['Location']);
-
+                    Key: file.name
+                }, function (err, data) {
+                    if (err) {
+                        if (err.code != "NotFound") {
+                            console.log(err, err.stack);
+                        }
+                    } // an error occurred
+                    else {
+                        //console.log(data);           // successful response
+                        if (!confirm("A file with this name already exists, do you want to replace?")) {
+                            s3_enabled = false
+                            $('.btn-remove-url').click()
+                            return;
+                        }
                     }
+                    // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html
+                    // default = 4 concurrent uploads of 5mb parts
+                    managedUpload = s3.upload({
+                        ACL: 'public-read',
+                        Body: file,
+                        Bucket: '{{h.get_s3_bucket()}}',
+                        Key: file.name,
+                        Metadata: {
+                            someKey: 'STRING_VALUE',
+                            someKey: 'STRING_VALUE'
+                        }
+                    }, function (error, data) {
+                        // upload finished
+                        if (error) {
+                            // upload failed
+                            $('.meter').hide();
+                            $('#upload-progress').html('Upload failed due to error:' + data);
+
+                        } else if (data) {
+                            // upload succeeded
+                            $('.meter').hide();
+                            $('#upload-progress').html('Upload completed, file available at <a href="' + data['Location']
+                            + '">' + data['Location'] + '</a>');
+
+                            $('#field-image-url').attr('value', data['Location']);
+                            $('#field-image-url')[0].value = data['Location'];
+                            $('#field-image-url').attr('placeholder', data['Location']);
+
+                        }
+                    });
+
+                    managedUpload.on('httpUploadProgress', function (progress) {
+                        // progress event handler
+                        // progress.loaded = number of bytes uploaded so far
+                        $('.meter').show();
+                        $('.meter').first().children().width(Math.round(progress.loaded / progress.total * 100) + '%');
+                        $('#upload-progress').html(
+                                Math.round(progress.loaded / progress.total * 100)
+                                + '% uploaded (' + progress.loaded + ' of ' + progress.total + ' bytes)');
+                    });
                 });
 
-                managedUpload.on('httpUploadProgress', function (progress) {
-                    // progress event handler
-                    // progress.loaded = number of bytes uploaded so far
-                    $('.meter').show();
-                    $('.meter').first().children().width(Math.round(progress.loaded / progress.total * 100) + '%');
-                    $('#upload-progress').html(
-                            Math.round(progress.loaded / progress.total * 100)
-                            + '% uploaded (' + progress.loaded + ' of ' + progress.total + ' bytes)');
-                });
 
                 $('.btn-remove-url').on('click', function () {
                     s3_enabled = false;
-                    managedUpload.abort();
+                    if (typeof managedUpload !== 'undefined') {
+                        managedUpload.abort();
+                    }
                 });
                 $(evt.target).val('');
             }
             ;
         });
-        $("#advanced-upload").on('click', function () {
-            s3_enabled = true;
-            isInChoose   = true;
-            $('#field-image-upload').click();
+        $("#advanced-upload").show()
+                .css('display', 'inline-block')
+                .on('click', function () {
+                    s3_enabled = true;
+                    isInChoose = true;
+                    $('#field-image-upload').click();
 
-        })
+                })
     };
 
 

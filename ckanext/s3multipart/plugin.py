@@ -16,6 +16,9 @@ def get_s3_bucket():
 def get_s3_region():
     return config.get('ckanext.s3multipart.s3_region', None)
 
+def get_s3_prefix():
+    return config.get('ckanext.s3multipart.s3_region', None)
+
 def get_session_credentials():
     context = {'model': model, 'session': model.Session,
                'user': c.user or c.author, 'auth_user_obj': c.userobj,

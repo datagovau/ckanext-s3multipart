@@ -4,7 +4,7 @@
 <link rel="stylesheet" type="text/css" href="/s3multipart.css"/>
 {% endblock %}
 {%block scripts %}
-{% set session_credentials = h.get_session_credentials() %}
+{% set session_credentials = h.get_session_credentials(c.pkg_dict) %}
 
 
 {{ super() }}
@@ -70,7 +70,7 @@
                         ACL: 'public-read',
                         Body: file,
                         Bucket: '{{h.get_s3_bucket()}}',
-                        Key: file.name,
+                        Key: '{{h.get_s3_prefix(c.pkg_dict)}}'+file.name,
                         Metadata: {
                             someKey: 'STRING_VALUE',
                             someKey: 'STRING_VALUE'

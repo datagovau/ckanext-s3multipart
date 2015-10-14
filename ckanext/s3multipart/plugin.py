@@ -52,7 +52,7 @@ def get_session_credentials(dataset):
         sts = boto.connect_sts();
         # tok = sts.get_session_token(duration=3600)
         tok = sts.assume_role("arn:aws:iam::148616182266:role/S3MultipartUploadOnly",
-                              c.user+"@"+config.get('ckan.site_url', ''),
+                              (c.user+"@"+config.get('ckan.site_id', ''))[:32],
                               policy=_get_policy(dataset)
                             ).credentials
         return tok.to_dict()

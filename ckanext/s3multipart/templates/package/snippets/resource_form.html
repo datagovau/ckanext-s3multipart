@@ -27,7 +27,7 @@
     {% endif %}
 
     </div>
-{% set session_credentials = h.get_session_credentials() %}
+{% set session_credentials = h.get_session_credentials(pkg_name) %}
 {% if 'session_token' in session_credentials %}
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.2.2.min.js"></script>
 <script language="javascript">
@@ -71,7 +71,7 @@
                     ACL: 'public-read',
                     Body: files[0],
                     Bucket: '{{h.get_s3_bucket()}}',
-                    Key: files[0].name
+                    Key: '{{h.get_s3_prefix(pkg_name)}}' + files[0].name
                 }, function (error, data) {
                     // upload finished
                     if (error) {
@@ -110,6 +110,7 @@
             }
             ;
         });
+        $("#advanced-upload").show();
         $("#advanced-upload").on('click', function () {
             s3_enabled = true;
             isInChoose   = true;

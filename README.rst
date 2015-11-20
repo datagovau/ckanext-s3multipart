@@ -110,9 +110,6 @@ Config Settings
     ckanext.s3multipart.s3_region = region_name
     # S3 IAM role ARN eg. "arn:aws:iam::account-id:role/role-name"
     ckanext.s3multipart.s3_role = arn:aws:iam::account-id:role/role-name
-    # Prefix for files uplaoded to s3 (optional)
-    ckanext.s3multipart.prefix = "ckan_uploads"
-
 
 -----
 TODOs
@@ -121,3 +118,5 @@ TODOs
 Upload files to subfolders based on user/organisation id, and limit API keys to those paths using https://docs.aws.amazon.com/STS/latest/UsingSTS/permissions-assume-role.html
 
 Additional Key Value metadata including original portal, user, package and resource id
+
+Limit file upload size using IAM policy on content-length headers?

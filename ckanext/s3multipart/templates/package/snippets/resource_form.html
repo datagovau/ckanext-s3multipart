@@ -20,7 +20,7 @@
 
 
     {% call form.input('upload', label=_('File'), id='field-image-upload', type='file', placeholder='', value='', error='', classes=['control-full']) %}
-    <a id="advanced-upload" class="btn" style="display: none;"><i class="icon-cloud-upload"></i>Advanced Upload</a>
+    <a id="advanced-upload" class="btn btn-default" style="display: none;"><i class="fa fa-cloud-upload"></i>Advanced Upload</a>
     {% endcall %}
     {% if is_upload %}
     {{ form.checkbox(field_clear, label=_('Clear Upload'), id='field-clear-upload', value='true', error='', classes=['control-full']) }}
@@ -29,7 +29,7 @@
     </div>
 {% set session_credentials = h.get_session_credentials(pkg_name) %}
 {% if 'session_token' in session_credentials %}
-<script src="https://sdk.amazonaws.com/js/aws-sdk-2.2.2.min.js"></script>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.176.0.min.js"></script>
 <script language="javascript">
 
     var files;

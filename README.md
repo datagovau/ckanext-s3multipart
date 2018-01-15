@@ -9,7 +9,7 @@ keys to users with CKAN access to create packages.
 
 ## Requirements
 
-"boto" python library
+"boto3" python library
 
 Amazon Web Services account for S3 API usage
 
@@ -78,7 +78,7 @@ name to the ckan config file
 Token Service access to AssumeRole. You should also insert the name of
 the IAM role in the resource clause to further limit access eg.
 
-	"Resource": "arn:aws:iam::account-id:role/role-name" { 
+	"Resource": "arn:aws:iam::1234:role/S3MultipartUploadOnly" { 
 		"Version": "2012-10-17", 
 		"Statement": 
 		[ { "Effect": "Allow", 
@@ -87,7 +87,7 @@ the IAM role in the resource clause to further limit access eg.
 	 }
 
 Make those credentials available to "boto" the python library for AWS eg. by creating environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-<https://boto.readthedocs.org/en/latest/boto_config_tut.html>
+<https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration>
 
 7.  Restart CKAN. For example if you've deployed CKAN with Apache on
     Ubuntu:
@@ -101,8 +101,8 @@ Config Settings
     ckanext.s3multipart.s3_bucket = bucket_name 
     # S3 region eg. ap-southeast-2 
     ckanext.s3multipart.s3_region = region_name 
-    # S3 IAM role ARN eg. "arn:aws:iam::account-id:role/role-name" 
-    ckanext.s3multipart.s3_role = arn:aws:iam::account-id:role/role-name
+    # S3 IAM role ARN eg. "arn:aws:iam::$account-id:role/$role-name" 
+    ckanext.s3multipart.s3_role = arn:aws:iam::1234:role/S3MultipartUploadOnly
 
 TODOs
 =====

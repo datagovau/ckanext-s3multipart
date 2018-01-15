@@ -27,112 +27,20 @@
             {% if 'SessionToken' in session_credentials %}
                 {% resource 's3multipart/s3multipart.css' %}
                 {% resource 's3multipart/aws_sdk.js' %}
+                {% resource 's3multipart/s3multipart.js' %}
 
                 <a id="advanced-upload" class="btn btn-default"
                    style="display: none;"
                    data-module="s3multipart"
-                   data-module-accessKeyId="{{session_credentials["AccessKeyId"]}}"
-                   data-module-secretAccessKey="{{session_credentials["SecretAccessKey"]}}"
-                   data-module-sessionToken="{{session_credentials["SessionToken"]}}"
-                   data-module-region="{{h.get_s3_region()}}"
-                   data-module-bucket="{{h.get_s3_bucket()}}"
-                   data-module-prefix="{{h.get_s3_prefix(pkg_name)}}"
+                   data-module-accessKeyId="{{ session_credentials["AccessKeyId"] }}"
+                   data-module-secretAccessKey="{{ session_credentials["SecretAccessKey"] }}"
+                   data-module-sessionToken="{{ session_credentials["SessionToken"] }}"
+                   data-module-region="{{ h.get_s3_region() }}"
+                   data-module-bucket="{{ h.get_s3_bucket() }}"
+                   data-module-prefix="{{ h.get_s3_prefix(pkg_name) }}"
                 >
                     <i class="fa fa-cloud-upload"></i>Advanced Upload
                 </a>
-
-                <script>
-                  var files;
-                  var managedUpload;
-                  var s3_enabled = false;
-                  var isInChoose = false;
-
-                  function s3Setup() {
-                    // https://jsfiddle.net/embkay06/kjjcv42L/32/
-                    $(window).on("focus", function (temp) {
-                      if (isInChoose) {
-                        isInChoose = false;
-                        setTimeout(function () {
-                          temp = $("#field-image-upload").val();
-                          if (temp) {
-                            return;
-                          }
-                          s3_enabled = false;
-                        }, 500);
-                      }
-                    });
-                    $('#field-image-upload').change(function (evt) {
-                      files = evt.target.files;
-                      if (files.length == 0) {
-                        s3_enabled = false;
-                      }
-                      if (s3_enabled) {
-                        var s3 = new AWS.S3({
-                          accessKeyId: '{{session_credentials["AccessKeyId"]}}',
-                          secretAccessKey: '{{session_credentials["SecretAccessKey"]}}',
-                          sessionToken: '{{session_credentials["SessionToken"]}}',
-                          region: '{{h.get_s3_region()}}'
-                        });
-                        // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html
-                        // default = 4 concurrent uploads of 5mb parts
-                        managedUpload = s3.upload({
-                          ACL: 'public-read',
-                          Body: files[0],
-                          Bucket: '{{h.get_s3_bucket()}}',
-                          Key: '{{h.get_s3_prefix(pkg_name)}}' + files[0].name
-                        }, function (error, data) {
-                          // upload finished
-                          if (error) {
-                            // upload failed
-                            $('.meter').hide();
-                            $('#upload-progress').html('Upload failed due to error:' + data);
-                            console.log(data);
-                          }
-                          else if (data) {
-                            // upload succeeded
-                            $('.meter').hide();
-                            $('#upload-progress').html('Upload completed, file available at <a href="' + data['Location']
-                                + '">' + data['Location'] + '</a>');
-
-                            $('#field-image-url').attr('value', data['Location']);
-                            $('#field-image-url')[0].value = data['Location'];
-                            $('#field-image-url').attr('placeholder', data['Location']);
-
-                          }
-                        });
-
-                        managedUpload.on('httpUploadProgress', function (progress) {
-                          // progress event handler
-                          // progress.loaded = number of bytes uploaded so far
-                          $('.meter').show();
-                          $('.meter').first().children().width(Math.round(progress.loaded / progress.total * 100) + '%');
-                          $('#upload-progress').html(
-                              Math.round(progress.loaded / progress.total * 100)
-                              + '% uploaded (' + progress.loaded + ' of ' + progress.total + ' bytes)');
-                        });
-
-                        $('.btn-remove-url').on('click', function () {
-                          s3_enabled = false;
-                          managedUpload.abort();
-                        });
-                        $(evt.target).val('');
-                      }
-                      ;
-                    });
-                    $("#advanced-upload").show();
-                    $("#advanced-upload").on('click', function () {
-                      s3_enabled = true;
-                      isInChoose = true;
-                      $('#field-image-upload').click();
-
-                    })
-                  }
-
-                  window.onload = function () {
-                    s3Setup();
-                  };
-
-                </script>
             {% endif %}
         {% endcall %}
         {% if is_upload %}

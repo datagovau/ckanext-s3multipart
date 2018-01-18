@@ -4,6 +4,7 @@ import ckan.plugins.toolkit as toolkit
 import ckan.logic as logic
 from pylons import config
 import boto3
+from botocore.client import Config
 import ckan.model as model
 from ckan.common import request, c
 
@@ -12,6 +13,10 @@ from logging import getLogger
 import json
 
 log = getLogger(__name__)
+NO_CREDENTIALS_MESSAGE = "Amazon AWS credentials not set up for boto. "
+"Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration"
+BAD_CREDENTIALS_MESSAGE = "Amazon AWS credentials not authorized. "
+"Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration"
 
 
 def get_s3_role():
@@ -96,7 +101,7 @@ def _get_policy(dataset_name):
 
 def get_session_credentials(dataset_name):
     if dataset_name == '':
-        return {}
+        return {'error': 'no dataset name/id specified'}
     context = {'model': model, 'session': model.Session,
                'user': c.user or c.author, 'auth_user_obj': c.userobj,
                'save': 'save' in request.params}
@@ -110,48 +115,62 @@ def get_session_credentials(dataset_name):
                                                         RoleSessionName=(c.user + "@" + config.get('ckan.site_id', ''))[
                                                                         :32], DurationSeconds=3600,
                                                         Policy=_get_policy(dataset_name))
-        return assume_role_object['Credentials']
+        return assume_role_object
 
     except botocore.exceptions.NoCredentialsError:
-        log.error("Amazon AWS credentials not set up for boto. "
-                  "Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration")
-        h.flash_error("Amazon AWS credentials not set up for boto. "
-                      "Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration")
-        return {}
+        log.error(NO_CREDENTIALS_MESSAGE)
+        h.flash_error(NO_CREDENTIALS_MESSAGE)
+        return {'error': NO_CREDENTIALS_MESSAGE}
     except logic.NotAuthorized:
-        log.error("Amazon AWS credentials not authorized. "
-                  "Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration")
-        h.flash_error("Amazon AWS credentials not authorized. "
-                      "Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration")
-        return {}
+        log.error(BAD_CREDENTIALS_MESSAGE)
+        h.flash_error(BAD_CREDENTIALS_MESSAGE)
+        return {'error': BAD_CREDENTIALS_MESSAGE}
 
 
 def get_presigned_post(dataset_name):
     if dataset_name == '':
-        return {}
-        context = {'model': model, 'session': model.Session,
-                   'user': c.user or c.author, 'auth_user_obj': c.userobj,
-                   'save': 'save' in request.params}
+        return {'error': 'no dataset name/id specified'}
+    context = {'model': model, 'session': model.Session,
+               'user': c.user or c.author, 'auth_user_obj': c.userobj,
+               'save': 'save' in request.params}
     try:
         logic.check_access('package_create', context)
         logic.check_access('package_update', context, {'id': dataset_name})
 
-        s3Client = boto3.client('s3')
-        s3Client.generate_presigned_url('get_object', Params={'Bucket': get_s3_bucket(), 'Key': 'hello.txt'},
-                                        ExpiresIn=100)
+        s3 = boto3.client('s3', region_name=get_s3_region(), config=Config(signature_version='s3v4'))
+        # Make sure everything posted is publicly readable
+        fields = {"acl": "public-read"}
 
-    except boto.exception.NoAuthHandlerFound, e:
-        log.error("Amazon AWS credentials not set up for boto. "
-                  "Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration")
-        h.flash_error("Amazon AWS credentials not set up for boto. "
-                      "Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration")
-        return {}
+        # Ensure that the ACL isn't changed
+        conditions = [
+            {"acl": "public-read"},
+            # ["content-length-range", 10, 100]
+        ]
+
+        # Generate the POST attributes
+        post = s3.generate_presigned_post(Bucket=get_s3_bucket(), Key=get_s3_prefix(dataset_name) + "${filename}",
+                                          Fields=fields, Conditions=conditions, ExpiresIn=3600)
+
+        # demonstrate an example using curl command line tool
+        #
+        # make sure the file is at the end of the POST payload
+        # else you get "Bucket POST must contain a field named 'key'.
+        # If it is specified, please check the order of the fields."
+        curl_example = 'curl -v '
+        for k, v in post['fields'].items():
+            curl_example += ' -F "%s=%s" ' % (k, v.replace('$', '\$'))
+        curl_example += ' -F "file=@filename" %s' % post['url']
+        post['curl_example'] = curl_example
+        return post
+
+    except botocore.exceptions.NoCredentialsError:
+        log.error(NO_CREDENTIALS_MESSAGE)
+        h.flash_error(NO_CREDENTIALS_MESSAGE)
+        return {'error': NO_CREDENTIALS_MESSAGE}
     except logic.NotAuthorized:
-        log.error("Amazon AWS credentials not authorized. "
-                  "Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration")
-        h.flash_error("Amazon AWS credentials not authorized. "
-                      "Please refer to https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration")
-        return {}
+        log.error(BAD_CREDENTIALS_MESSAGE)
+        h.flash_error(BAD_CREDENTIALS_MESSAGE)
+        return {'error': BAD_CREDENTIALS_MESSAGE}
 
 
 class S3MultipartPlugin(plugins.SingletonPlugin):
@@ -160,9 +179,9 @@ class S3MultipartPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IRoutes, inherit=True)
 
     def before_map(self, map):
-        map.connect('/api/s3_auth',
+        map.connect('/api/3/action/get_s3_auth/{dataset}',
                     controller='ckanext.s3multipart.controller:S3MultipartController', action='s3_auth')
-        map.connect('/api/s3_post',
+        map.connect('/api/3/action/get_s3_post/{dataset}',
                     controller='ckanext.s3multipart.controller:S3MultipartController', action='s3_post')
         return map
 

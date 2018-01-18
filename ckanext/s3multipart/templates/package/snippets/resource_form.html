@@ -23,7 +23,7 @@
 
         {% call form.input('upload', label=_('File'), id='field-image-upload', type='file', placeholder='', value='',
     error='', classes=['control-full']) %}
-            {% set session_credentials = h.get_session_credentials(pkg_name) %}
+            {% set session_credentials = h.get_session_credentials(pkg_name).get('Credentials',{}) %}
             {% if 'SessionToken' in session_credentials %}
                 {% resource 's3multipart/s3multipart.css' %}
                 {% resource 's3multipart/aws_sdk.js' %}

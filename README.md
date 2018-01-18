@@ -107,7 +107,7 @@ Config Settings
 TODOs
 =====
 Additional Key Value metadata including original portal, user, package
-and resource id
+and resource id when uploaded via JS
 
 Limit file upload size using IAM policy on content-length headers?
 

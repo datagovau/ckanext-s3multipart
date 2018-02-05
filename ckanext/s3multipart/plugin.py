@@ -115,6 +115,7 @@ def get_session_credentials(dataset_name):
                                                         RoleSessionName=(c.user + "@" + config.get('ckan.site_id', ''))[
                                                                         :32], DurationSeconds=3600,
                                                         Policy=_get_policy(dataset_name))
+        assume_role_object['Credentials']['Expiration'] = str(assume_role_object['Credentials']['Expiration'])
         return assume_role_object
 
     except botocore.exceptions.NoCredentialsError:

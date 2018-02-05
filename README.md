@@ -41,16 +41,24 @@ Make sure your CORS settings for your S3 bucket looks similar to what is
 provided below (The PUT allowed method and the ETag exposed header are
 critical).
 
-    <CORSConfiguration>
+    <?xml version="1.0" encoding="UTF-8"?>
+    <CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
         <CORSRule>
-             <AllowedOrigin><https://>*.yourdomain.com</AllowedOrigin>
-             <AllowedOrigin><http://>*.yourdomain.com</AllowedOrigin>
-             <AllowedMethod>PUT</AllowedMethod>
-             <AllowedMethod>POST</AllowedMethod>
-             <AllowedMethod>DELETE</AllowedMethod>
-             <ExposeHeader>ETag</ExposeHeader>
-             <AllowedHeader>*</AllowedHeader>
-         </CORSRule>
+            <AllowedOrigin>https://*.yourdomain.com</AllowedOrigin>
+            <AllowedOrigin>http://*.yourdomain.com</AllowedOrigin>
+            <AllowedMethod>PUT</AllowedMethod>
+            <AllowedMethod>POST</AllowedMethod>
+            <AllowedMethod>DELETE</AllowedMethod>
+            <MaxAgeSeconds>3000</MaxAgeSeconds>
+            <ExposeHeader>x-amz-version-id</ExposeHeader>
+            <ExposeHeader>ETag</ExposeHeader>
+            <AllowedHeader>*</AllowedHeader>
+        </CORSRule>
+        <CORSRule>
+            <AllowedOrigin>*</AllowedOrigin>
+            <AllowedMethod>GET</AllowedMethod>
+            <AllowedHeader>*</AllowedHeader>
+        </CORSRule>
     </CORSConfiguration>
 
 ​5. Create an S3 access policy. For maximum security, rather than using

@@ -91,6 +91,7 @@ ckan.module('s3multipart', function ($) {
         $('#field-image-upload').click();
 
       })
+      $("#field-image-upload").hide();
     }
 
   }

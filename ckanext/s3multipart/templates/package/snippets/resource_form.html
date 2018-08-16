@@ -1,15 +1,23 @@
 {% ckan_extends %}
 {% block basic_fields_url %}
-
     {% set is_upload = (data.url_type == 'upload') %}
-    {% set placeholder = placeholder if placeholder else _('http://example.com/my-image.jpg') %}
+    {#  form.image_upload(data, errors, field_url='url', field_upload='upload', field_clear='clear_upload',
+         is_upload_enabled=h.uploads_enabled(), is_url=data.url and not is_upload, is_upload=is_upload,
+         upload_label=_, url_label=_('URL'), placeholder=_, field_name='name') #}
 
-    <div class="image-upload" data-module="image-upload"
+    {% set placeholder =  _('http://example.com/external-data.csv') %}
+    {% set url_label = _('URL') %}
+    {% set upload_label = _('Data') %}
+    {% if is_upload_enabled %}
+    <div class="image-upload"
+         data-module="image-upload"
          data-module-is_url="{{ 'true' if data.url and not is_upload else 'false' }}"
          data-module-is_upload="{{ 'true' if is_upload else 'false' }}"
-         data-module-field_url="url" data-module-field_upload="upload"
-         data-module-field_clear="clear_upload" data-module-upload_label="{{ _('File') }}">
-
+         data-module-field_url="url"
+         data-module-field_upload="upload"
+         data-module-field_clear="clear_upload"
+         data-module-upload_label="{{ _('File') }}">
+    {% endif %}
         {% call form.input('url', label=_('URL'), id='field-image-url', placeholder=placeholder, value=data.get('url'),
     error=errors.get('url'), classes=['control-full']) %}
             <div class="meter animate" style="display:none">
@@ -20,7 +28,7 @@
         </span>
         {% endcall %}
 
-
+{% if h.uploads_enabled() %}
         {% call form.input('upload', label=_('File'), id='field-image-upload', type='file', placeholder='', value='',
     error='', classes=['control-full']) %}
             {% set session_credentials = h.get_session_credentials(pkg_name).get('Credentials',{}) %}
@@ -39,15 +47,15 @@
                    data-module-bucket="{{ h.get_s3_bucket() }}"
                    data-module-prefix="{{ h.get_s3_prefix(pkg_name) }}"
                 >
-                    <i class="fa fa-cloud-upload"></i>Advanced Upload
+                    <i class="fa fa-cloud-upload"></i>Browse for Advanced Upload...
                 </a>
             {% endif %}
         {% endcall %}
-        {% if is_upload %}
-            {{ form.checkbox(field_clear, label=_('Clear Upload'), id='field-clear-upload', value='true', error='',
-    classes=['control-full']) }}
-        {% endif %}
+    {% if is_upload %}
+        {{ form.checkbox(field_clear, label=_('Clear Upload'), id='field-clear-upload', value='true', error='', classes=['control-full']) }}
+    {% endif %}
+{% endif %}
 
-    </div>
+{% if h.uploads_enabled() %}</div>{% endif %}
 
 {% endblock %}

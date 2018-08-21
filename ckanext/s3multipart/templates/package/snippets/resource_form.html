@@ -4,7 +4,7 @@
     {% set placeholder =  _('http://example.com/external-data.csv') %}
     {% set url_label = _('URL') %}
     {% set upload_label = _('Data') %}
-    {% if is_upload_enabled %}
+    {% if h.uploads_enabled() %}
     <div class="image-upload"
          data-module="image-upload"
          data-module-is_url="{{ 'true' if data.url and not is_upload else 'false' }}"
@@ -32,7 +32,6 @@
                 {% resource 's3multipart/s3multipart.css' %}
                 {% resource 's3multipart/aws_sdk.js' %}
                 {% resource 's3multipart/s3multipart.js' %}
-<br/>
                 <a id="advanced-upload" class="btn btn-default"
                    style="display: none;"
                    data-module="s3multipart"
@@ -43,7 +42,7 @@
                    data-module-bucket="{{ h.get_s3_bucket() }}"
                    data-module-prefix="{{ h.get_s3_prefix(pkg_name) }}"
                 >
-                    <i class="fa fa-cloud-upload"></i>Browse for Advanced Upload...
+                    <i class="fa fa-cloud-upload"></i> Large File Upload <i>(beta)</i>
                 </a>
             {% endif %}
         {% endcall %}

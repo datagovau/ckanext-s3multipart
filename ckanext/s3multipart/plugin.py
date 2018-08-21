@@ -127,7 +127,7 @@ def get_session_credentials(dataset_name):
         sts_connection = sess.client('sts')
         assume_role_object = sts_connection.assume_role(RoleArn=get_s3_role(),
                                                         RoleSessionName=(c.user + "@" + config.get('ckan.site_id', ''))[
-                                                                        :32], DurationSeconds=3600,
+                                                                        :32], DurationSeconds=(60*60*6),
                                                         Policy=_get_policy(dataset_name))
         assume_role_object['Credentials']['Expiration'] = str(assume_role_object['Credentials']['Expiration'])
         return assume_role_object

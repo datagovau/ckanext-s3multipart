@@ -1,10 +1,6 @@
 {% ckan_extends %}
 {% block basic_fields_url %}
     {% set is_upload = (data.url_type == 'upload') %}
-    {#  form.image_upload(data, errors, field_url='url', field_upload='upload', field_clear='clear_upload',
-         is_upload_enabled=h.uploads_enabled(), is_url=data.url and not is_upload, is_upload=is_upload,
-         upload_label=_, url_label=_('URL'), placeholder=_, field_name='name') #}
-
     {% set placeholder =  _('http://example.com/external-data.csv') %}
     {% set url_label = _('URL') %}
     {% set upload_label = _('Data') %}
@@ -36,7 +32,7 @@
                 {% resource 's3multipart/s3multipart.css' %}
                 {% resource 's3multipart/aws_sdk.js' %}
                 {% resource 's3multipart/s3multipart.js' %}
-
+<br/>
                 <a id="advanced-upload" class="btn btn-default"
                    style="display: none;"
                    data-module="s3multipart"

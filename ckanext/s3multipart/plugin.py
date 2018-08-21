@@ -102,6 +102,10 @@ def _get_policy(dataset_name):
 def get_session_credentials(dataset_name):
     if dataset_name == '':
         return {'error': 'no dataset name/id specified'}
+    if not c.pkg_dict or 'organization' not in c.pkg_dict \
+            or c.pkg_dict['organization'].get('name', None) \
+            not in config.get('ckanext.s3multipart.enabled_orgs', '').split():
+        return {'error': 'organization not activated for s3 use'}
     context = {'model': model, 'session': model.Session,
                'user': c.user or c.author, 'auth_user_obj': c.userobj,
                'save': 'save' in request.params}
@@ -134,6 +138,13 @@ def get_presigned_post(dataset_name):
     context = {'model': model, 'session': model.Session,
                'user': c.user or c.author, 'auth_user_obj': c.userobj,
                'save': 'save' in request.params}
+    data_dict = {'id': dataset_name, 'include_tracking': False}
+    pkg_dict = logic.get_action('package_show')(context, data_dict)
+    if not pkg_dict or 'organization' not in pkg_dict \
+            or pkg_dict['organization'].get('name', None) \
+            not in config.get('ckanext.s3multipart.enabled_orgs', '').split():
+        return {'error': 'organization not activated for s3 use'}
+
     try:
         logic.check_access('package_create', context)
         logic.check_access('package_update', context, {'id': dataset_name})

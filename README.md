@@ -111,6 +111,8 @@ Config Settings
     ckanext.s3multipart.s3_region = region_name 
     # S3 IAM role ARN eg. "arn:aws:iam::$account-id:role/$role-name" 
     ckanext.s3multipart.s3_role = arn:aws:iam::1234:role/S3MultipartUploadOnly
+    # organisations that can use s3, as url slugs space seperated
+    ckanext.s3multipart.enabled_orgs = abc dta dto
 
 TODOs
 =====

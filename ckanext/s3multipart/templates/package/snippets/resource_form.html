@@ -29,9 +29,9 @@
     error='', classes=['control-full']) %}
             {% set session_credentials = h.get_session_credentials(pkg_name).get('Credentials',{}) %}
             {% if 'SessionToken' in session_credentials %}
-                {% resource 's3multipart/s3multipart.css' %}
-                {% resource 's3multipart/aws_sdk.js' %}
-                {% resource 's3multipart/s3multipart.js' %}
+                {% resource 'ckanext-s3multipart/s3multipart.css' %}
+                {% resource 'ckanext-s3multipart/aws_sdk.js' %}
+                {% resource 'ckanext-s3multipart/s3multipart.js' %}
                 <a id="advanced-upload" class="btn btn-default"
                    style="display: none;"
                    data-module="s3multipart"

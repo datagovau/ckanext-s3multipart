@@ -32,15 +32,17 @@ def get_s3_region():
 
 
 def get_s3_prefix(dataset_name):
-    dataset = toolkit.get_action('package_show')({'model': model},
-                                                 {'id': dataset_name})
+    context = {'model': model, 'session': model.Session,
+               'user': c.user or c.author, 'auth_user_obj': c.userobj,
+               'save': 'save' in request.params}
+    dataset = toolkit.get_action('package_show')(context, {'id': dataset_name})
     prefix = config.get('ckanext.s3multipart.s3_prefix', '')
     org_prefix = True  # config.get('ckanext.s3multipart.s3_org_prefix', '')
     if prefix != '':
         prefix = prefix + "/"
     if org_prefix != '':
-        prefix = prefix + dataset['owner_org'] + "/"
-    return prefix + dataset['id'] + "/"
+        prefix = prefix + dataset.get('owner_org', '') + "/"
+    return prefix + dataset.get('id', '') + "/"
 
 
 def _get_policy(dataset_name):

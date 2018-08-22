@@ -121,3 +121,8 @@ and resource id when uploaded via JS
 
 Limit file upload size using IAM policy on content-length headers?
 
+Prefill metadata like format
+
+Make persistent download links appear/redirect in web UI.
+
+Analytics for downloads
